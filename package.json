@@ -1,0 +1,23 @@
+{
+  "name": "wwbot",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "bot": "node main.js",
+    "lint": "eslint main.js"
+  },
+  "author": "Nekohime",
+  "license": "CC0-1.0",
+  "dependencies": {
+    "@vitejs/plugin-vue": "^4.4.0",
+    "eslint": "^8.51.0",
+    "eslint-config-google": "^0.14.0",
+    "eslint-plugin-vue": "^9.17.0",
+    "isomorphic-ws": "^5.0.0",
+    "node-fetch": "^3.3.1",
+    "ws": "^8.13.0"
+  }
+}
