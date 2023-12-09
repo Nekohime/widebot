@@ -26,14 +26,14 @@ const data = await response.json();
 
 import IRC from 'irc-framework';
 
-var irc = new IRC.Client();
+const irc = new IRC.Client();
 irc.connect({
   host: 'irc.deltaworlds.com',
   port: 6667,
   nick: 'WideBot',
 });
 
-let theChannel = '#lobby';
+const theChannel = '#lobby';
 
 // List of worlds to join (ids)
 const worlds = [
@@ -57,12 +57,12 @@ async function handleWorld(world) {
   chat.onMessage((m) => {
     message = JSON.parse(m);
     if (message.name !== 'user#3') {
-        irc.say(theChannel, `[World#${world}] <${message.name}>: ${message.msg}`);
+      irc.say(theChannel, `[World#${world}] <${message.name}>: ${message.msg}`);
     }
   });
   irc.on('message', function(event) {
     // chat.send(`[${event}] <${message.name}>: ${message.msg}`)
-    let chan = event.target;
+    const chan = event.target;
     if (chan.startsWith('#') && event.type === 'privmsg') {
       console.log(`[${chan}] <${event.nick}>: ${event.message}`);
       chat.send(`[${chan}] <${event.nick}>: ${event.message}`);
@@ -74,8 +74,8 @@ async function handleWorld(world) {
 }
 
 irc.on('registered', function() {
-    console.log('Connected!?');
-    irc.join(theChannel);
+  console.log('Connected!?');
+  irc.join(theChannel);
 });
 
 
