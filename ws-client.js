@@ -2,7 +2,7 @@
  * @author Julien 'Blaxar' Bardagi <blaxar.waldarax@gmail.com>
  */
 
-import {unpackEntityStates, serializeEntityState, deserializeEntityState}
+import {deserializeEntityState, serializeEntityState, unpackEntityStates}
   from './common/ws-data-format.js';
 import WebSocket from 'isomorphic-ws';
 

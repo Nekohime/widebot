@@ -1,7 +1,7 @@
-import fetch from 'node-fetch';
 import {entityType, updateType} from './common/ws-data-format.js';
-import WsClient from './ws-client.js';
 import CommandParser from './command-parser.js';
+import fetch from 'node-fetch';
+import WsClient from './ws-client.js';
 
 /**
  * Function to check if a value is a number.
@@ -28,18 +28,28 @@ class Client {
     this.httpURL = httpURL;
     this.authJSON = authJSON;
 
+    this.defaults = {
+      x: 6.916,
+      y: 0.03,
+      z: 3211.1782,
+      yaw: 300,
+      pitch: 0,
+      roll: 0,
+    };
+
     this.botState = {
       targetId: 0, // For fun stuff
-      myState: {
+
+      sdkState: {
         entityType: entityType.user,
         updateType: updateType.moving,
         entityId: 3, // User ID in database
-        x: 6.916,
-        y: 0.03,
-        z: 3211.1782,
-        yaw: 300,
-        pitch: 0,
-        roll: 0,
+        x: this.defaults.x,
+        y: this.defaults.y,
+        z: this.defaults.z,
+        yaw: this.defaults.yaw,
+        pitch: this.defaults.pitch,
+        roll: this.defaults.roll,
         dataBlock0: 3, // Avatar ID - Why dataBlock0?
       },
     };
@@ -107,7 +117,7 @@ class Client {
         this.doFollow(user);
       });
 
-      states.send(this.botState.myState);
+      states.send(this.botState.sdkState);
     });
   }
 
@@ -119,9 +129,28 @@ class Client {
      */
   async doFollow(user) {
     if (isNumber(user?.entityId) && this.botState.targetId === user?.entityId) {
-      this.botState.myState.x = user.x;
-      this.botState.myState.y = user.y;
-      this.botState.myState.z = user.z;
+      // Define a follow distance and a speed factor for the following movement
+      const followDistance = 2.0; // Adjust this value to set the desired distance
+      const followSpeed = 0.2;
+
+      // Calculate the differences between the user's position and the bot's position
+      const deltaX = user.x - this.botState.sdkState.x;
+      const deltaY = user.y - this.botState.sdkState.y;
+      const deltaZ = user.z - this.botState.sdkState.z;
+
+      // Calculate the distance between the bot and the user
+      const distance = Math.sqrt(deltaX ** 2 + deltaY ** 2 + deltaZ ** 2);
+
+      // Calculate the offset based on the follow distance
+      const offsetX = (deltaX / distance) * followDistance;
+      // const offsetY = (deltaY / distance) * followDistance;
+      const offsetY = 0;
+      const offsetZ = (deltaZ / distance) * followDistance;
+
+      // Incrementally update the bot's position with the offset and follow speed
+      this.botState.sdkState.x += (deltaX - offsetX) * followSpeed;
+      this.botState.sdkState.y += (deltaY - offsetY) * followSpeed;
+      this.botState.sdkState.z += (deltaZ - offsetZ) * followSpeed;
     }
   }
 
