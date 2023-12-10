@@ -89,36 +89,41 @@ class Client {
      * @param {string} token - The authentication token.
      */
   async processWorld(world, token) {
-    const client = new WsClient(`${this.wsURL}/api`, encodeURIComponent(token));
-    const chat = await client.worldChatConnect(world);
-    const states = await client.worldStateConnect(1);
-    const parser = new CommandParser(this.botState);
+    try {
+      const client = new WsClient(`${this.wsURL}/api`,
+          encodeURIComponent(token));
+      const chat = await client.worldChatConnect(world);
+      const states = await client.worldStateConnect(1);
+      const parser = new CommandParser(this.botState);
 
-    chat.onMessage((message) => {
-      const msgPacket = JSON.parse(message);
+      chat.onMessage((message) => {
+        const msgPacket = JSON.parse(message);
 
-      if (msgPacket && msgPacket.msg) {
-        let ret = null;
-        if (parser.isCommand(msgPacket.msg)) {
-          ret = parser.handleCommand(msgPacket);
+        if (msgPacket && msgPacket.msg) {
+          let ret = null;
+          if (parser.isCommand(msgPacket.msg)) {
+            ret = parser.handleCommand(msgPacket);
+          }
+          console.log(`[World#${world}] <${msgPacket.name}>: ${msgPacket.msg}`);
+          if (ret) chat.send(ret);
         }
-        console.log(`[World#${world}] <${msgPacket.name}>: ${msgPacket.msg}`);
-        if (ret) chat.send(ret);
-      }
-    });
-
-    chat.onClose((event) => {
-      // Handle chat close event if needed
-    });
-
-    states.onMessage((users) => {
-      // console.log(users) Spammy
-      users.forEach((user, i) => {
-        this.doFollow(user);
       });
 
-      states.send(this.botState.sdkState);
-    });
+      chat.onClose((event) => {
+        // Handle chat close event if needed
+      });
+
+      states.onMessage((users) => {
+        // console.log(users) Spammy
+        users.forEach((user, i) => {
+          this.doFollow(user);
+        });
+
+        states.send(this.botState.sdkState);
+      });
+    } catch (error) {
+      console.error(`Error processing world ${world}:`, error);
+    }
   }
 
 
@@ -128,13 +133,11 @@ class Client {
      * @param {Object} user - The user to follow.
      */
   async doFollow(user) {
+    // Check if the user's entityId is a number and matches the targetId
     if (isNumber(user?.entityId) && this.botState.targetId === user?.entityId) {
-      // console.log(user)
-      // Define a follow distance and a speed factor for the following movement
-
-      const followDistance = 2.0;
-      const followSpeed = 0.2;
-      const smoothingFactor = 0.2;
+      const followDistance = 2.0; // Distance minimun to maintain from the user.
+      const followSpeed = 0.2; // Speed factor for following.
+      const smoothingFactor = 0.2; // Smoothing factor for gradual adjustment.
 
       // Calculate the differences between the user's position
       //  and the bot's position
@@ -147,9 +150,12 @@ class Client {
 
       // Calculate the offset based on the follow distance
       const offsetX = (deltaX / distance) * followDistance;
-      // const offsetY = (deltaY / distance) * followDistance;
+      // Offset in the y-axis is set to 0 as we are
+      //  not adjusting for height differences.
       const offsetY = 0;
+      // Calculate the offset based on the follow distance
       const offsetZ = (deltaZ / distance) * followDistance;
+
 
       // Incrementally update the bot's position
       //  with the offset and follow speed
