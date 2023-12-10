@@ -43,7 +43,7 @@ class Client {
       sdkState: {
         entityType: entityType.user,
         updateType: updateType.moving,
-        entityId: 3, // User ID in database
+        entityId: 1, // User ID in database
         x: this.defaults.x,
         y: this.defaults.y,
         z: this.defaults.z,
@@ -129,11 +129,15 @@ class Client {
      */
   async doFollow(user) {
     if (isNumber(user?.entityId) && this.botState.targetId === user?.entityId) {
+      // console.log(user)
       // Define a follow distance and a speed factor for the following movement
-      const followDistance = 2.0; // Adjust this value to set the desired distance
-      const followSpeed = 0.2;
 
-      // Calculate the differences between the user's position and the bot's position
+      const followDistance = 2.0;
+      const followSpeed = 0.2;
+      const smoothingFactor = 0.2;
+
+      // Calculate the differences between the user's position
+      //  and the bot's position
       const deltaX = user.x - this.botState.sdkState.x;
       const deltaY = user.y - this.botState.sdkState.y;
       const deltaZ = user.z - this.botState.sdkState.z;
@@ -147,10 +151,24 @@ class Client {
       const offsetY = 0;
       const offsetZ = (deltaZ / distance) * followDistance;
 
-      // Incrementally update the bot's position with the offset and follow speed
+      // Incrementally update the bot's position
+      //  with the offset and follow speed
       this.botState.sdkState.x += (deltaX - offsetX) * followSpeed;
       this.botState.sdkState.y += (deltaY - offsetY) * followSpeed;
       this.botState.sdkState.z += (deltaZ - offsetZ) * followSpeed;
+      // Calculate the yaw angle to face towards the user
+      const targetYaw = Math.atan2(deltaX, deltaZ);
+
+      // Check if the angle difference is within a reasonable range
+      const angleDifference = targetYaw - this.botState.sdkState.yaw;
+      if (Math.abs(angleDifference) < Math.PI) {
+        // Smoothly adjust the bot's yaw towards the target yaw
+        this.botState.sdkState.yaw += angleDifference * smoothingFactor;
+      } else {
+        // If the angle difference is too large,
+        //  directly set the yaw to the target's yaw.
+        this.botState.sdkState.yaw = targetYaw;
+      }
     }
   }
 
